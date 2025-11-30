@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import ExpenseSummary from "./ExpenseSummary";
 import ExpenseChart from "./ExpenseChart";
 import ExpenseForm from "./ExpenseForm";
@@ -12,13 +12,16 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
+          {/* Expense charts */}
           <ExpenseChart />
+
+          {/* Expense history */}
+          <ExpenseList />
         </div>
-        <div>
-          <ExpenseForm />
-        </div>
+
+        {/* Expense form */}
+        <ExpenseForm />
       </div>
-      <ExpenseList />
     </div>
   );
 };

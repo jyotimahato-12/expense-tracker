@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useExpenses } from "../context/ExpenseContext";
-import { getChartData, getExpensesByMonth } from "../utils/expenses";
 import { BarChart, PieChart } from "lucide-react";
 import ExpensePieChart from "./ExpensePieChart";
 import ExpenseBarChart from "./ExpenseBarChart";
+import { getChartData, getExpensesByMonth } from "../utils/expenses";
 
 const ExpenseChart = () => {
   const { expenses } = useExpenses();
   const [chartType, setChartType] = useState("pie");
 
-  const chartData = getChartData(expenses);
-  const monthlyData = getExpensesByMonth(expenses);
+  const chartData = useMemo(() => getChartData(expenses), [expenses]);
+  const monthlyData = useMemo(() => getExpensesByMonth(expenses), [expenses]);
 
   if (expenses.length === 0) {
     return (
@@ -18,30 +18,6 @@ const ExpenseChart = () => {
         <h2 className="text-2xl font-semibold text-expense-dark mb-4">
           Expense Analytics
         </h2>
-        <div className="flex justify-center mb-6 space-x-4">
-          <button
-            onClick={() => setChartType("pie")}
-            className={`flex items-center cursor-pointer px-4 py-2 rounded-md transition-all ${
-              chartType === "pie"
-                ? "bg-expense text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <PieChart size={18} className="mr-2" />
-            <span>Pie Chart</span>
-          </button>
-          <button
-            onClick={() => setChartType("bar")}
-            className={`flex items-center cursor-pointer px-4 py-2 rounded-md transition-all ${
-              chartType === "bar"
-                ? "bg-expense text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <BarChart size={18} className="mr-2" />
-            <span>Bar Chart</span>
-          </button>
-        </div>
         <p className="text-gray-500">
           Add some expenses to see your spending analytics
         </p>
@@ -58,37 +34,35 @@ const ExpenseChart = () => {
       <div className="flex justify-center mb-6 space-x-4">
         <button
           onClick={() => setChartType("pie")}
-          className={`flex items-center cursor-pointer px-4 py-2 rounded-md transition-all ${
+          className={`flex items-center px-4 py-2 rounded-md transition-all ${
             chartType === "pie"
               ? "bg-expense text-white"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           <PieChart size={18} className="mr-2" />
-          <span>Pie Chart</span>
+          Pie Chart
         </button>
         <button
           onClick={() => setChartType("bar")}
-          className={`flex items-center cursor-pointer px-4 py-2 rounded-md transition-all ${
+          className={`flex items-center px-4 py-2 rounded-md transition-all ${
             chartType === "bar"
               ? "bg-expense text-white"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           <BarChart size={18} className="mr-2" />
-          <span>Bar Chart</span>
+          Bar Chart
         </button>
       </div>
 
-      <div>
-        {chartType === "pie" ? (
-          <ExpensePieChart data={chartData} />
-        ) : (
-          <ExpenseBarChart data={monthlyData} />
-        )}
-      </div>
+      {chartType === "pie" ? (
+        <ExpensePieChart data={chartData} />
+      ) : (
+        <ExpenseBarChart data={monthlyData} />
+      )}
     </div>
   );
 };
 
-export default ExpenseChart;
+export default React.memo(ExpenseChart);

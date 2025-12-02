@@ -18,9 +18,12 @@ const CATEGORY_COLORS = {
   Other: "#64748B", // Slate-500 - Neutral slate
 };
 
-const ExpensePieChart = ({ data }) => {
-  if (data.length === 0) {
-    return (
+const ExpensePieChart = ({ data }) => {        /*  //data is an array of objects, each with a name and value
+  if (data.length === 0) {                        //[
+                                                         { name: "Food", value: 2000 },
+                                                         { name: "Transport", value: 500 },
+                                                        { name: "Entertainment", value: 1000 }
+       return (                                     ]//
       <div className="text-center text-gray-500">
         No expense data to display
       </div>
@@ -84,3 +87,4 @@ const ExpensePieChart = ({ data }) => {
 };
 
 export default ExpensePieChart;
+

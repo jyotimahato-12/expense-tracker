@@ -9,21 +9,25 @@ import {
 } from "recharts";
 
 const CATEGORY_COLORS = {
-  Food: "#6366F1", // Indigo-500 - Softer indigo
-  Transport: "#06B6D4", // Cyan-500 - Fresh cyan
-  Entertainment: "#A855F7", // Purple-500 - Vibrant purple
-  Utilities: "#14B8A6", // Teal-500 - Refreshing teal
-  Health: "#22C55E", // Green-500 - Natural green
-  Shopping: "#F97316", // Orange-500 - Warm orange
-  Other: "#64748B", // Slate-500 - Neutral slate
+  Food: "#6366F1",
+  Transport: "#06B6D4",
+  Entertainment: "#A855F7",
+  Utilities: "#14B8A6",
+  Health: "#22C55E",
+  Shopping: "#F97316",
+  Other: "#64748B",
 };
 
-const ExpensePieChart = ({ data }) => {        /*  //data is an array of objects, each with a name and value
-  if (data.length === 0) {                        //[
-                                                         { name: "Food", value: 2000 },
-                                                         { name: "Transport", value: 500 },
-                                                        { name: "Entertainment", value: 1000 }
-       return (                                     ]//
+// data is an array of objects like:
+// [
+//   { name: "Food", value: 2000 },
+//   { name: "Transport", value: 500 },
+//   { name: "Entertainment", value: 1000 }
+// ]
+
+const ExpensePieChart = ({ data }) => {
+  if (data.length === 0) {
+    return (
       <div className="text-center text-gray-500">
         No expense data to display
       </div>
@@ -45,7 +49,9 @@ const ExpensePieChart = ({ data }) => {        /*  //data is an array of objects
           <p className="font-medium">{name}</p>
           <p className="text-lg">
             ₹{value.toFixed(2)}
-            <span className="text-sm text-gray-500 ml-1">({percentage}%)</span>
+            <span className="text-sm text-gray-500 ml-1">
+              ({percentage}%)
+            </span>
           </p>
         </div>
       );
@@ -62,10 +68,8 @@ const ExpensePieChart = ({ data }) => {        /*  //data is an array of objects
           cy="50%"
           labelLine={false}
           outerRadius={80}
-          fill="#8884d8"
           dataKey="value"
           animationDuration={750}
-          animationBegin={0}
           animationEasing="ease-out"
         >
           {data.map((entry, index) => (
@@ -87,4 +91,3 @@ const ExpensePieChart = ({ data }) => {        /*  //data is an array of objects
 };
 
 export default ExpensePieChart;
-

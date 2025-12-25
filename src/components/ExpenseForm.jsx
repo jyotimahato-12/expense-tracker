@@ -6,7 +6,7 @@ const ExpenseForm = () => {
   const { addExpense } = useExpenses();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Food");
+  const [category, setCategory] = useState("food");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,11 +22,12 @@ const ExpenseForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // <-- important fix
+
     try {
       if (!description.trim()) {
         throw new Error("Please enter a description");
       }
-
       if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
         throw new Error("Please enter a valid amount");
       }
@@ -40,12 +41,13 @@ const ExpenseForm = () => {
 
       toast.success("Expense added successfully");
 
+      // Reset fields
       setDescription("");
       setAmount("");
-      setCategory("Food");
+      setCategory("food");
       setDate(new Date().toISOString().split("T")[0]);
     } catch (error) {
-      toast.error("Failed to add expense");
+      toast.error(error.message || "Failed to add expense");
     } finally {
       setIsSubmitting(false);
     }
@@ -53,10 +55,12 @@ const ExpenseForm = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-semibold text-expense-dark mb-6 text-center">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
         Add New Expense
       </h2>
+
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Description */}
         <div>
           <label
             htmlFor="description"
@@ -70,10 +74,12 @@ const ExpenseForm = () => {
             placeholder="What did you spend on?"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-expense-light focus:border-transparent transition-all"
+            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
             disabled={isSubmitting}
           />
         </div>
+
+        {/* Amount */}
         <div>
           <label
             htmlFor="amount"
@@ -87,10 +93,12 @@ const ExpenseForm = () => {
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-expense-light focus:border-transparent transition-all"
+            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
             disabled={isSubmitting}
           />
         </div>
+
+        {/* Category */}
         <div>
           <label
             htmlFor="category"
@@ -100,10 +108,9 @@ const ExpenseForm = () => {
           </label>
           <select
             id="category"
-            placeholder="What did you spend on?"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-expense-light focus:border-transparent transition-all"
+            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
             disabled={isSubmitting}
           >
             {categoryOptions.map((option) => (
@@ -114,6 +121,7 @@ const ExpenseForm = () => {
           </select>
         </div>
 
+        {/* Date */}
         <div>
           <label
             htmlFor="date"
@@ -126,13 +134,19 @@ const ExpenseForm = () => {
             id="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-expense-light focus:border-transparent transition-all"
+            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
             disabled={isSubmitting}
           />
         </div>
+
+        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-expense text-white py-2  rounded-md hover:bg-expense-dark font-medium focus:outline-none focus:ring-2 focus:ring-expense-light  transition-all"
+          className={`w-full py-2 rounded-md font-medium text-white transition-all
+            ${isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-400"
+            }`}
           disabled={isSubmitting}
         >
           {isSubmitting ? "Adding..." : "Add Expense"}

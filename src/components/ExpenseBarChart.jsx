@@ -74,6 +74,8 @@ const ExpenseBarChart = ({ data }) => {
         />
       </BarChart>
     </ResponsiveContainer>
+    
+
   );
 };
 

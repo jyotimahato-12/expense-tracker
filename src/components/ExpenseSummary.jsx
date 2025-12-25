@@ -58,6 +58,9 @@ const ExpenseSummary = React.memo(() => {
 
       {/* Total Entries */}
       <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg">
+        
+
+
         <div className="flex items-center space-x-4">
           <div className="bg-green-100 p-3 rounded-full">
             <TrendingDown size={24} className="text-green-500" />

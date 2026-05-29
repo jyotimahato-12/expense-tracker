@@ -1,23 +1,52 @@
-# Expense Tracker
+# AI-Powered Financial Analytics Platform
 
-## 📌 Description
-A simple expense tracker web application that helps users track their daily expenses, categorize spending, and monitor total expenditure.
+## 📌 Overview
+A backend-focused financial analytics system that processes user expense data to generate insights, categorize transactions, and analyze spending patterns.
 
-This project was built to practice React fundamentals, state management, and component-based architecture.
+The project focuses on backend logic, data processing, and AI-driven insights, while the frontend dashboard is currently under development.
+
+---
+
+## 🚀 Key Features
+- 📊 Expense tracking and storage
+- 🧠 AI-based financial insights generation
+- 🏷️ Smart transaction categorization
+- 📈 Spending pattern analysis using aggregated data
+- 🔍 Backend APIs for financial data processing
+
+---
 
 ## 🛠 Tech Stack
-- React
-- Vite
+- Node.js
+- Express.js
+- MongoDB
 - JavaScript
-- CSS
+- (Optional: OpenAI API / AI service if used)
 
-## ✨ Features
-- Add new expenses with amount and category
-- Display list of expenses
-- Calculate total expenses
-- Responsive UI
+---
 
-## 🚀 How to Run Locally
-1. Clone the repository
-   ```bash
-   git clone https://github.com/jyotimahato-12/expense-tracker.git
+## 🏗 System Design (Backend Focus)
+1. User submits transaction data via API  
+2. Backend validates and stores data in MongoDB  
+3. Aggregation logic processes spending patterns  
+4. AI layer generates insights and suggestions  
+5. APIs return structured analytics data for frontend consumption  
+
+---
+
+## ⚠️ Project Status
+- Backend: ✅ Completed  
+- AI Logic: ✅ Completed  
+- Database Layer: ✅ Completed  
+- Frontend Dashboard: 🚧 In Progress  
+
+---
+
+## 📌 Example Insights
+- “Food is your highest spending category this month”
+- “You spent 25% more compared to last month”
+- “Frequent low-value transactions detected in entertainment category”
+
+
+
+ithub.com/your-username/finance-analytics.git

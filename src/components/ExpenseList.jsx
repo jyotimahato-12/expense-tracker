@@ -3,11 +3,13 @@ import { useExpenses } from "../context/ExpenseContext";
 import { formatCurrency, formatDate, getCategoryTextColor } from "../utils/expenses";
 import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+ 
 
 const ExpenseRow = React.memo(({ expense, onDelete }) => (
   <tr className="hover:bg-gray-50 transition-colors">
     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatDate(expense.date)}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{expense.description}</td>
+    {/*  Fixed: Changed 'expense.description' to 'expense.title' to match backend schema */}
+    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{expense.title}</td> 
     <td className="px-6 py-4 whitespace-nowrap text-sm">
       <span className={`${getCategoryTextColor(expense.category)} font-medium`}>
         {expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}
@@ -15,18 +17,30 @@ const ExpenseRow = React.memo(({ expense, onDelete }) => (
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{formatCurrency(expense.amount)}</td>
     <td className="px-6 py-4 whitespace-nowrap text-right">
-      <button onClick={() => onDelete(expense.id)} className="text-red-500 hover:text-red-700 transition-colors">
+      {/*  Fixed: Changed 'expense.id' to 'expense._id || expense.id' to pass correct MongoDB identifier */}
+      <button onClick={() => onDelete(expense._id )} className="text-red-500 hover:text-red-700 transition-colors">
         <Trash2 size={18} />
       </button>
     </td>
   </tr>
 ));
 
-const ExpenseList = () => {
-  const { expenses, deleteExpense } = useExpenses();
+// Accept 'expenses' as a prop
+const ExpenseList = ({ expenses: propExpenses }) => {
+  const context = useExpenses();
+  const contextExpenses = context ? context.expenses : undefined;
+  const deleteExpense = context ? context.deleteExpense : () => {};
+
+  // 1. Prioritize propExpenses passed from Dashboard
+  // 2. Fall back to contextExpenses
+  // 3. Fall back to empty array [] to prevent crash
+  const rawExpenses = propExpenses || contextExpenses || [];
+  const expenses = Array.isArray(rawExpenses) ? rawExpenses : [];
+
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   const categoryOptions = [
+    { value: "all", label: "All Categories" }, 
     { value: "food", label: "Food & Dining" },
     { value: "transport", label: "Transportation" },
     { value: "entertainment", label: "Entertainment" },
@@ -36,16 +50,21 @@ const ExpenseList = () => {
     { value: "other", label: "Other" },
   ];
 
+  // Now safely filters a guaranteed array
   const filteredAndSortedExpenses = useMemo(() => {
     return expenses
       .filter(exp => categoryFilter === "all" || exp.category === categoryFilter)
       .sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [expenses, categoryFilter]);
 
-  const handleDelete = (id) => {
-    deleteExpense(id);
+ const handleDelete = async (id) => {
+  try {
+    await deleteExpense(id);
     toast.success("Expense deleted successfully");
-  };
+  } catch (err) {
+    toast.error("Failed to delete expense");
+  }
+};
 
   return (
     <div className="w-full">
@@ -73,16 +92,16 @@ const ExpenseList = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th>Date</th>
-                  <th>Description</th>
-                  <th>Category</th>
-                  <th>Amount</th>
-                  <th>Action</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredAndSortedExpenses.map(exp => (
-                  <ExpenseRow key={exp.id} expense={exp} onDelete={handleDelete} />
+                  <ExpenseRow key={exp._id || exp.id} expense={exp} onDelete={handleDelete} />
                 ))}
               </tbody>
             </table>

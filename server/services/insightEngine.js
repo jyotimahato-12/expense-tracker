@@ -19,40 +19,92 @@
 
 
 
-function calculatePercentageChange(current, previous) {
 
-  if (previous === 0) return 100;
+function predictNextMonthExpense(monthlyData) {
 
-  return (
-    ((current - previous) / previous) * 100
-  ).toFixed(1);
+  const months =
+    Object.keys(monthlyData);
+
+  if (months.length < 3) {
+    return null;
+  }
+
+  months.sort();
+
+  const lastThree =
+    months.slice(-3);
+
+  let total = 0;
+
+  for (const month of lastThree) {
+    total +=
+      monthlyData[month].expense;
+  }
+
+  const predicted =
+    Math.round(total / 3);
+
+  return predicted;
 }
 
 
 
 
 
-function generateTrendInsights(monthlyData) {
+function detectRecurringExpenses(transactions) {
 
+  const merchantMap = {};
+
+  for (const tx of transactions) {
+
+    if (tx.type !== "expense") continue;
+
+    if (!merchantMap[tx.merchant]) {
+      merchantMap[tx.merchant] = 0;
+    }
+
+    merchantMap[tx.merchant]++;
+  }
+
+  const recurring = [];
+
+  for (const merchant in merchantMap) {
+
+    if (merchantMap[merchant] >= 2) {
+
+      recurring.push(
+        `${merchant} appears to be a recurring expense`
+      );
+    }
+   }
+
+  return recurring;
+  }
+
+function calculatePercentageChange(current, previous) {
+
+  if (previous === 0) return 100;
+
+  return  (
+    ((current - previous) / previous) * 100
+  ).toFixed(1);
+}
+
+
+function generateTrendInsights(monthlyData) {
   const insights = [];
 
   const months = Object.keys(monthlyData);
 
   if (months.length < 2) {
-    insights.push(
-      "Not enough data for trend analysis"
-    );
-
+    insights.push("Not enough data for trend analysis");
     return insights;
   }
 
-  months.sort();
+  months.sort((a, b) => new Date(a) - new Date(b));
 
-  const currentMonth =
-    monthlyData[months[months.length - 1]];
-
-  const previousMonth =
-    monthlyData[months[months.length - 2]];
+  const currentMonth = monthlyData[months[months.length - 1]];
+  const previousMonth = monthlyData[months[months.length - 2]];
 
   const expenseChange =
     calculatePercentageChange(
@@ -74,6 +126,9 @@ function generateTrendInsights(monthlyData) {
 
   return insights;
 }
+
+
+
 
 
 
@@ -119,7 +174,7 @@ function splitIncomeExpense(transactions) {
     if (tx.type === "income") income += tx.amount;
     else expense += tx.amount;
   }
-
+   console.log(1);
   return { income, expense };
 }
 
@@ -144,14 +199,23 @@ function splitIncomeExpense(transactions) {
 
 
 
+// REPLACE THE OLD ONE WITH THIS NEW ONE:
+function checkBudget(expense, budget) {
+  // Edge case handle: If budget is 0 or not provided, avoid NaN division
+  if (!budget || budget === 0) return "No budget threshold set for this month.";
 
- function checkBudget(expense, budget) {
+  const usagePercentage = (expense / budget) * 100;
+
   if (expense > budget) {
-    return "You exceeded your monthly budget";
+    return `🚨 Budget Alert: You have exceeded your monthly budget by ₹${(expense - budget).toFixed(2)}!`;
+  } 
+  
+  if (usagePercentage >= 80) {
+    return `⚠️ Budget Warning: You have consumed ${usagePercentage.toFixed(0)}% of your monthly budget allowance.`;
   }
-  return "You are within budget";
-}
 
+  return "You are safely within your budget guidelines for this month.";
+}
 
 
 
@@ -174,13 +238,25 @@ function splitIncomeExpense(transactions) {
   checkBudget(expense, budget);
 
     insights.push(budgetMessage);
-  const monthlyData =
+    const monthlyData =
     groupTransactionsByMonth(transactions);
 
-     const trendInsights =
+    const trendInsights =
     generateTrendInsights(monthlyData);
 
   insights.push(...trendInsights);
+  const recurringInsights=detectRecurringExpenses(transactions);
+  insights.push(...recurringInsights);
+
+  const predictedExpense =
+  predictNextMonthExpense(monthlyData);
+
+  if (predictedExpense) {
+
+  insights.push(
+    `Predicted next month expense: ₹${predictedExpense}`
+  );
+  }
 
 
   // Insight 1
@@ -200,18 +276,23 @@ function splitIncomeExpense(transactions) {
      
 
   // Insight 4
-  if (grouped.Food > 3000) {
+  if (grouped.Food > expense * 0.4){
     insights.push("Food spending is very high this month");
   }
-
-  return insights;
+   return insights;
+   
 }
+
+
+  
+
 module.exports = {
   generateInsights,
   groupByCategory,
   splitIncomeExpense,
   getTopCategory,
   checkBudget,
+  detectRecurringExpenses,
   groupTransactionsByMonth,
   generateTrendInsights,
   calculatePercentageChange

@@ -7,8 +7,15 @@ const ExpenseForm = () => {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("food");
+
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState("");
+
+const [type, setType] = useState("expense"); // income | expense
+
+const [merchant, setMerchant] = useState("Unknown");
+const [note, setNote] = useState("");
 
   const categoryOptions = [
     { value: "food", label: "Food & Dining" },
@@ -20,7 +27,7 @@ const ExpenseForm = () => {
     { value: "other", label: "Other" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true); // <-- important fix
 
@@ -32,11 +39,15 @@ const ExpenseForm = () => {
         throw new Error("Please enter a valid amount");
       }
 
-      addExpense({
-        description: description.trim(),
-        amount: Number(amount),
-        category,
-        date,
+      await addExpense({
+          title: description.trim(),
+          amount: Number(amount),
+          category,
+          type,
+          date,
+          note:"",
+          merchant:"Unknown",
+
       });
 
       toast.success("Expense added successfully");
@@ -54,106 +65,99 @@ const ExpenseForm = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-        Add New Expense
-      </h2>
+  <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md mx-auto">
+    <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+      Add New Expense
+    </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Description */}
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Description
-          </label>
-          <input
-            type="text"
-            id="description"
-            placeholder="What did you spend on?"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
-            disabled={isSubmitting}
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Amount */}
-        <div>
-          <label
-            htmlFor="amount"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Amount
-          </label>
-          <input
-            type="number"
-            id="amount"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
-            disabled={isSubmitting}
-          />
-        </div>
+      {/* Title */}
+      <input
+        type="text"
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
 
-        {/* Category */}
-        <div>
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Category
-          </label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
-            disabled={isSubmitting}
-          >
-            {categoryOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Description (optional replace OR keep same as title) */}
+      <input
+        type="text"
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
 
-        {/* Date */}
-        <div>
-          <label
-            htmlFor="date"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Date
-          </label>
-          <input
-            type="date"
-            id="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
-            disabled={isSubmitting}
-          />
-        </div>
+      {/* Amount */}
+      <input
+        type="number"
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className={`w-full py-2 rounded-md font-medium text-white transition-all
-            ${isSubmitting
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-400"
-            }`}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Adding..." : "Add Expense"}
-        </button>
-      </form>
-    </div>
-  );
+      {/* Type (income/expense) */}
+      <select
+        value={type}
+        onChange={(e) => setType(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      >
+        <option value="expense">expense</option>
+        <option value="income">income</option>
+      </select>
+
+      {/* Category */}
+      <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      >
+        {categoryOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      {/* Merchant */}
+      <input
+        type="text"
+        placeholder="Merchant"
+        value={merchant}
+        onChange={(e) => setMerchant(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
+
+      {/* Note */}
+      <textarea
+        placeholder="Note"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
+
+      {/* Date */}
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full py-2 bg-indigo-600 text-white rounded-md"
+      >
+        {isSubmitting ? "Adding..." : "Add Expense"}
+      </button>
+    </form>
+  </div>
+);
 };
 
 export default ExpenseForm;

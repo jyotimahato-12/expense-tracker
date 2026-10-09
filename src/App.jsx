@@ -3,21 +3,25 @@ import Index from "./pages/Index";
 import Dashboard from "./components/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Register from "./components/Register";
 
 const App = () => {
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const token = localStorage.getItem("token");
 
   return (
-    
     <BrowserRouter>
       <Routes>
+
         {/* Login */}
         <Route
           path="/"
-          element={isLoggedIn ? <Navigate to="/dashboard" /> : <Index />}
-        />
+          element= {<Index />}/>
+        
 
-        {/* Protected Dashboard */}
+        {/* Register */}
+        <Route path="/register" element={<Register />} />
+
+        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -29,6 +33,7 @@ const App = () => {
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
+
       </Routes>
     </BrowserRouter>
   );

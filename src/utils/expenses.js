@@ -15,11 +15,14 @@ export const formatDate = (dateString) => {
   });
 };
 
-export const getTotalExpenses = (expenses) => {
-  return expenses.reduce((total, expense) => total + expense.amount, 0);
+export const getTotalExpenses = (transactions) => {
+  return transactions.reduce((total, transaction) => {
+    return transaction.type === "expense"
+      ? total + Number(transaction.amount)
+      : total;
+  }, 0);
 };
-
-export const getExpensesByCategory = (expenses) => {
+export const getExpensesByCategory = (transactions) => {
   const categories = {
     food: 0,
     transport: 0,
@@ -30,15 +33,17 @@ export const getExpensesByCategory = (expenses) => {
     health: 0,
   };
 
-  expenses.forEach((expense) => {
-    categories[expense.category] += expense.amount;
+  transactions.forEach((transaction) => {
+    if (transaction.type === "expense") {
+      categories[transaction.category] += Number(transaction.amount);
+    }
   });
 
   return categories;
 };
 
-export const getChartData = (expenses) => {
-  const expensesByCategory = getExpensesByCategory(expenses);
+export const getChartData = (transactions) => {
+  const expensesByCategory = getExpensesByCategory(transactions);
   return Object.entries(expensesByCategory)
     .filter(([_, value]) => value > 0)
     .map(([name, value]) => ({
@@ -75,13 +80,16 @@ export const getExpensesByMonth = (expenses, numMonths = 6) => {
   }
 
   expenses.forEach((expense) => {
+    // Ignore income transactions
+    if (expense.type !== "expense") return;
+
     const expenseDate = new Date(expense.date);
     const monthYear = `${getMonthName(
       expenseDate
     )} ${expenseDate.getFullYear()}`;
 
     if (result[monthYear] !== undefined) {
-      result[monthYear] += expense.amount;
+      result[monthYear] += Number(expense.amount);
     }
   });
 

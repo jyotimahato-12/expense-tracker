@@ -1,24 +1,43 @@
 import React, { useMemo } from "react";
 import { useExpenses } from "../context/ExpenseContext";
-import { formatCurrency, getExpensesByCategory, getTotalExpenses } from "../utils/expenses";
+import {
+  formatCurrency,
+  getExpensesByCategory,
+  getTotalExpenses,
+} from "../utils/expenses";
 import { TrendingDown, TrendingUp, Wallet } from "lucide-react";
 
 const ExpenseSummary = React.memo(() => {
   const { expenses } = useExpenses();
 
-  const totalExpenses = useMemo(() => getTotalExpenses(expenses), [expenses]);
-  const categoriesData = useMemo(() => getExpensesByCategory(expenses), [expenses]);
+  // ✅ SAFETY FIRST (CRITICAL FIX)
+  const safeExpenses = Array.isArray(expenses) ? expenses : [];
+
+  const totalExpenses = useMemo(
+    () => getTotalExpenses(safeExpenses),
+    [safeExpenses]
+  );
+ console.log("total expense",totalExpenses);
+  const categoriesData = useMemo(
+    () => getExpensesByCategory(safeExpenses),
+    [safeExpenses]
+  );
 
   const highestCategory = useMemo(() => {
     let highest = { name: "none", amount: 0 };
+
     Object.entries(categoriesData).forEach(([category, amount]) => {
-      if (amount > highest.amount) highest = { name: category, amount };
+      if (amount > highest.amount) {
+        highest = { name: category, amount };
+      }
     });
+
     return highest;
   }, [categoriesData]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
       {/* Total Expenses */}
       <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg">
         <div className="flex items-center space-x-4">
@@ -26,8 +45,12 @@ const ExpenseSummary = React.memo(() => {
             <Wallet size={24} className="text-expense" />
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-500">Total Expenses</h3>
-            <p className="text-2xl font-bold text-expense-dark">{formatCurrency(totalExpenses)}</p>
+            <h3 className="text-sm font-medium text-gray-500">
+              Total Expenses
+            </h3>
+            <p className="text-2xl font-bold text-expense-dark">
+              {formatCurrency(totalExpenses)}
+            </p>
           </div>
         </div>
       </div>
@@ -39,11 +62,15 @@ const ExpenseSummary = React.memo(() => {
             <TrendingUp size={24} className="text-red-500" />
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-500">Highest Category</h3>
+            <h3 className="text-sm font-medium text-gray-500">
+              Highest Category
+            </h3>
             <p className="text-2xl font-bold text-expense-dark">
               {highestCategory.name !== "none" ? (
                 <>
-                  <span className="capitalize">{highestCategory.name}</span>
+                  <span className="capitalize">
+                    {highestCategory.name}
+                  </span>
                   <span className="text-sm font-normal text-gray-500 ml-2">
                     ({formatCurrency(highestCategory.amount)})
                   </span>
@@ -58,19 +85,21 @@ const ExpenseSummary = React.memo(() => {
 
       {/* Total Entries */}
       <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg">
-        
-
-
         <div className="flex items-center space-x-4">
           <div className="bg-green-100 p-3 rounded-full">
             <TrendingDown size={24} className="text-green-500" />
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-500">Total Entries</h3>
-            <p className="text-2xl font-bold text-expense-dark">{expenses.length}</p>
+            <h3 className="text-sm font-medium text-gray-500">
+              Total Entries
+            </h3>
+            <p className="text-2xl font-bold text-expense-dark">
+              {safeExpenses.length}
+            </p>
           </div>
         </div>
       </div>
+
     </div>
   );
 });

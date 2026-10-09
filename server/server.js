@@ -1,23 +1,33 @@
 
+require("dotenv").config();
+
+const express = require("express");
+const app = express();
+const cors = require("cors");
+app.use(cors());
+app.use(express.json());
+
+
 const 
  {initializeMerchantIndex}
 = require("./services/merchantIndex");
 const insightRoutes =require("./routes/insightsRoutes.js");
 const expenseRoutes =require("./routes/expenseRoutes.js");
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
+
+
 const Merchant = require("./models/Merchant");
 const connectDB = require("./config/db.js");
 
 const detectMerchant=require("./services/detectMerchant.js");
 const authRoutes=require("./routes/authRoutes.js");
+const sharedExpenseRoutes =
+  require(
+    "./routes/sharedExpenseRoutes"
+  );
 
 
-const app = express();
 
-app.use(cors());
-app.use(express.json());
+
 app.use("/api/insights", insightRoutes);
 
 
@@ -62,6 +72,12 @@ app.post("/detect", async (req, res) => {
 
 });
 app.use("/api/expenses", expenseRoutes);
+
+
+app.use(
+  "/api/shared-expenses",
+  sharedExpenseRoutes
+);
 
 const PORT = process.env.PORT || 5000;
 

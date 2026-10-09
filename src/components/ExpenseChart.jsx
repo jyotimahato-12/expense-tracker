@@ -5,10 +5,21 @@ import ExpensePieChart from "./ExpensePieChart";
 import ExpenseBarChart from "./ExpenseBarChart";
 import { getChartData, getExpensesByMonth } from "../utils/expenses";
 
-const ExpenseChart = () => {
-  const { expenses } = useExpenses();
+// Accept 'expenses' as a prop
+const ExpenseChart = ({ expenses: propExpenses }) => {
+  // Safe destructuring of context in case it is undefined or null
+  const context = useExpenses();
+  const contextExpenses = context ? context.expenses : undefined;
+
+  // 1. Prioritize props passed from parent (Dashboard)
+  // 2. Fall back to context expenses
+  // 3. Fall back to an empty array [] to prevent crash
+  const rawExpenses = propExpenses || contextExpenses || [];
+  const expenses = Array.isArray(rawExpenses) ? rawExpenses : [];
+
   const [chartType, setChartType] = useState("pie");
 
+  // These will now safely receive a guaranteed array
   const chartData = useMemo(() => getChartData(expenses), [expenses]);
   const monthlyData = useMemo(() => getExpensesByMonth(expenses), [expenses]);
 

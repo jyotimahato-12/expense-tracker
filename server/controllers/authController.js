@@ -25,11 +25,17 @@ const User = require("../models/User.js");
       password: hashedPassword,
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: user,
-    });
+    const token = jwt.sign(
+  {  id: user._id, email: user.email },
+    process.env.JWT_SECRET,
+  { expiresIn: "1h" }
+  );
+
+return res.status(201).json({
+  success: true,
+  token,
+  data: user,
+});
   } catch (error) {
     return res.status(500).json({
       success: false,

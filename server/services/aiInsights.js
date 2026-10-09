@@ -16,11 +16,11 @@ async function generateAISummary(data) {
   Give short financial insights and suggestions.
   `;
 
+  const start = Date.now();
+
   const response =
     await openai.chat.completions.create({
-
       model: "gpt-4.1-mini",
-
       messages: [
         {
           role: "user",
@@ -29,7 +29,17 @@ async function generateAISummary(data) {
       ],
     });
 
-  return response.choices[0].message.content;
+  const duration = Date.now() - start;
+
+  console.log(
+    `AI Summary generated in ${duration} ms`
+  );
+
+  return {
+    summary:
+      response.choices[0].message.content,
+    generationTimeMs: duration,
+  };
 }
 
 module.exports = {

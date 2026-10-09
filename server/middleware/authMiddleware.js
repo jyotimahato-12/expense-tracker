@@ -9,7 +9,9 @@ const protect = async (req, res, next) => {
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
-        console.log("HEADERS:", req.headers.authorization);
+            
+
+
     if (!token) {
       return res.status(401).json({
         success: false,

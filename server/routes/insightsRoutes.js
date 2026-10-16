@@ -1,5 +1,5 @@
 const express=require("express");
-const  getInsights  =require("../Controllers/insightController.js");
+const  getInsights  =require("../controllers/insightController.js");
 const protect=require("../middleware/authMiddleware.js");
 
 const router = express.Router();

@@ -3,39 +3,43 @@ import { useExpenses } from "../context/ExpenseContext";
 import { formatCurrency, formatDate, getCategoryTextColor } from "../utils/expenses";
 import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
- 
 
 const ExpenseRow = React.memo(({ expense, onDelete }) => (
   <tr className="hover:bg-gray-50 transition-colors">
-    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatDate(expense.date)}</td>
-    {/*  Fixed: Changed 'expense.description' to 'expense.title' to match backend schema */}
-    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{expense.title}</td> 
+    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      {formatDate(expense.date)}
+    </td>
+    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      {expense.title || expense.description}
+    </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm">
       <span className={`${getCategoryTextColor(expense.category)} font-medium`}>
-        {expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}
+        {expense.category ? expense.category.charAt(0).toUpperCase() + expense.category.slice(1) : "Other"}
       </span>
     </td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{formatCurrency(expense.amount)}</td>
+    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+      {formatCurrency(expense.amount)}
+    </td>
     <td className="px-6 py-4 whitespace-nowrap text-right">
-      {/*  Fixed: Changed 'expense.id' to 'expense._id || expense.id' to pass correct MongoDB identifier */}
-      <button onClick={() => onDelete(expense._id )} className="text-red-500 hover:text-red-700 transition-colors">
+      <button 
+        onClick={() => onDelete(expense._id || expense.id)} 
+        className="text-red-500 hover:text-red-700 transition-colors"
+      >
         <Trash2 size={18} />
       </button>
     </td>
   </tr>
 ));
 
-// Accept 'expenses' as a prop
 const ExpenseList = ({ expenses: propExpenses }) => {
   const context = useExpenses();
   const contextExpenses = context ? context.expenses : undefined;
   const deleteExpense = context ? context.deleteExpense : () => {};
 
-  // 1. Prioritize propExpenses passed from Dashboard
-  // 2. Fall back to contextExpenses
-  // 3. Fall back to empty array [] to prevent crash
-  const rawExpenses = propExpenses || contextExpenses || [];
-  const expenses = Array.isArray(rawExpenses) ? rawExpenses : [];
+  // Direct check: strictly use propExpenses if passed, otherwise fallback to context
+  const expenses = Array.isArray(propExpenses) 
+    ? propExpenses 
+    : (Array.isArray(contextExpenses) ? contextExpenses : []);
 
   const [categoryFilter, setCategoryFilter] = useState("all");
 
@@ -50,7 +54,6 @@ const ExpenseList = ({ expenses: propExpenses }) => {
     { value: "other", label: "Other" },
   ];
 
-  // Now safely filters a guaranteed array
   const filteredAndSortedExpenses = useMemo(() => {
     return expenses
       .filter(exp => categoryFilter === "all" || exp.category === categoryFilter)
@@ -58,13 +61,28 @@ const ExpenseList = ({ expenses: propExpenses }) => {
   }, [expenses, categoryFilter]);
 
  const handleDelete = async (id) => {
-  try {
-    await deleteExpense(id);
-    toast.success("Expense deleted successfully");
-  } catch (err) {
-    toast.error("Failed to delete expense");
-  }
-};
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:5000/api/expenses/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete expense on server");
+      }
+
+      toast.success("Expense deleted successfully");
+
+      // If Dashboard passed down an onExpenseDeleted or onExpenseAdded callback, trigger it here
+      // Or if you want to notify parent dashboard, you can accept a callback prop just like ExpenseForm!
+      window.location.reload(); // Quickest way to sync state if parent isn't using a callback prop yet
+    } catch (err) {
+      toast.error(err.message || "Failed to delete expense");
+    }
+  };
 
   return (
     <div className="w-full">
@@ -112,4 +130,5 @@ const ExpenseList = ({ expenses: propExpenses }) => {
   );
 };
 
-export default React.memo(ExpenseList);
+// Removed React.memo wrapper so prop updates from Dashboard always trigger a re-render
+export default ExpenseList;

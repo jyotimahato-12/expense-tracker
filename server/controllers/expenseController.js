@@ -21,6 +21,7 @@ const addExpense = async(req,res)=>{
 
     }
     catch(error){
+      console.error("🔥 ACTUAL ADD EXPENSE ERROR:", error.errors); //
         res.status(500).json({
             message:error.message
         });
@@ -30,11 +31,13 @@ const addExpense = async(req,res)=>{
 
 
 const deleteExpense = async (req, res) => {
-    try {
+   try {
+        console.log("🗑️ Attempting to delete ID from params:", req.params.id);
 
         const expense = await Expense.findById(req.params.id);
 
         if (!expense) {
+            console.log("❌ Expense not found in DB for ID:", req.params.id);
             return res.status(404).json({
                 message: "Expense not found"
             });
@@ -42,6 +45,7 @@ const deleteExpense = async (req, res) => {
 
         // Check if logged-in user owns this expense
         if (expense.user.toString() !== req.user.id.toString()) {
+            console.log("❌ Unauthorized attempt to delete expense");
             return res.status(401).json({
                 message: "Unauthorized"
             });
@@ -67,6 +71,7 @@ const getExpenses = async (req, res) => {
     // Pass the user filter back into .find() to restrict results
     const expenses = await Expense.find({
       user: req.user.id,
+      type: "expense"
     });
     
     console.log(`Total Expenses count for User ${req.user.id}:`, expenses.length);
@@ -90,7 +95,8 @@ const getSummary = async (req, res) => {
     const summary = await Expense.aggregate([
   {
     $match: {
-      user: new mongoose.Types.ObjectId(req.user.id)
+      user: new mongoose.Types.ObjectId(req.user.id),
+      type: "expense"
     }
   },
   {
@@ -127,10 +133,27 @@ const getSummary = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const updateExpense = async (req, res) => {  
+  try {  
+    const expense = await Expense.findById(req.params.id);  
+    if (!expense) return res.status(404).json({ message: "Expense not found" });  
+    if (expense.user.toString() !== req.user.id.toString())  
+      return res.status(401).json({ message: "Unauthorized" });  
+  
+    Object.assign(expense, req.body);  
+    await expense.save();  
+    res.json(expense);  
+  } catch (error) {  
+    res.status(500).json({ message: error.message });  
+  }  
+};  
+  
+
 
 module.exports = {
    addExpense,
    deleteExpense,
    getExpenses,
-   getSummary
+   getSummary,
+   updateExpense
 };

@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "http://localhost:5000/api";
 
 // 1. Helper function to get authorization headers dynamically
 const getAuthHeaders = () => {
@@ -16,7 +16,7 @@ const getAuthHeaders = () => {
 
 /* 🔥 GET insights (needs auth) */
 const getInsights = async () => {
-  const res = await fetch(`${BASE_URL}/api/insights/insights`, {
+  const res = await fetch(`${BASE_URL}/insights/insights`, {
     headers: getAuthHeaders(),
   });
   return res.json();
@@ -25,7 +25,7 @@ const getInsights = async () => {
 /* 💰 Add expense (needs auth) */
 const addExpense = async (expense) => {
   console.log("j");
-  const res = await fetch(`${BASE_URL}/api/expenses/add`, {
+  const res = await fetch(`${BASE_URL}/expenses/add`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -121,15 +121,34 @@ const addMerchant = async (data) => {
 
   return res.json();
 };
+/* 🌐 Generic API handler for ExpenseContext */
+const api = async (endpoint, options = {}) => {
+  const res = await fetch(`${BASE_URL}/${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+  });
 
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "API request failed");
+  }
+
+  return res.json();
+};
 export {
   addExpense,
   getExpenses,
   deleteExpense,
+  
   detectMerchant,
   login,
   getSharedExpenses,
   addSharedExpense,
   getMerchants,
   addMerchant,
+  api,
 };

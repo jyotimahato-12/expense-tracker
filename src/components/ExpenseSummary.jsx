@@ -7,33 +7,43 @@ import {
 } from "../utils/expenses";
 import { TrendingDown, TrendingUp, Wallet } from "lucide-react";
 
-const ExpenseSummary = React.memo(() => {
-  const { expenses } = useExpenses();
+const ExpenseSummary = React.memo(({ summary, expenses: propExpenses }) => {
+  const context = useExpenses();
+  const expenses = propExpenses || context?.expenses || [];
 
-  // ✅ SAFETY FIRST (CRITICAL FIX)
+  // ✅ SAFETY FIRST
   const safeExpenses = Array.isArray(expenses) ? expenses : [];
 
-  const totalExpenses = useMemo(
-    () => getTotalExpenses(safeExpenses),
-    [safeExpenses]
-  );
- console.log("total expense",totalExpenses);
+  // Use summary API data if available, otherwise calculate locally from expenses array
+  const totalExpenses = summary?.totalExpenses ?? getTotalExpenses(safeExpenses);
+  
+  const totalEntries = summary?.totalEntries ?? safeExpenses.length;
+
   const categoriesData = useMemo(
     () => getExpensesByCategory(safeExpenses),
     [safeExpenses]
   );
 
   const highestCategory = useMemo(() => {
-    let highest = { name: "none", amount: 0 };
+    if (summary?.highestCategory) {
+      // Find amount for highest category from breakdown if available
+      const found = summary.categoryBreakdown?.find(
+        (item) => item._id === summary.highestCategory
+      );
+      return {
+        name: summary.highestCategory,
+        amount: found ? found.totalAmount : 0,
+      };
+    }
 
+    let highest = { name: "none", amount: 0 };
     Object.entries(categoriesData).forEach(([category, amount]) => {
       if (amount > highest.amount) {
         highest = { name: category, amount };
       }
     });
-
     return highest;
-  }, [categoriesData]);
+  }, [summary, categoriesData]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -66,7 +76,7 @@ const ExpenseSummary = React.memo(() => {
               Highest Category
             </h3>
             <p className="text-2xl font-bold text-expense-dark">
-              {highestCategory.name !== "none" ? (
+              {highestCategory.name && highestCategory.name !== "none" ? (
                 <>
                   <span className="capitalize">
                     {highestCategory.name}
@@ -94,7 +104,7 @@ const ExpenseSummary = React.memo(() => {
               Total Entries
             </h3>
             <p className="text-2xl font-bold text-expense-dark">
-              {safeExpenses.length}
+              {totalEntries}
             </p>
           </div>
         </div>

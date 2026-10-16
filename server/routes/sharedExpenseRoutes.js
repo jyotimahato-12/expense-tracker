@@ -7,7 +7,7 @@ const router =
 const {
   addSharedExpense
 } = require(
-  "../Controllers/sharedExpenseController"
+  "../controllers/sharedExpenseController"
 );
 
 router.post(

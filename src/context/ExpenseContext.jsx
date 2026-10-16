@@ -1,146 +1,193 @@
-import { createContext, useContext, useEffect, useReducer } from "react";
-import {
-  getExpenses,
-  addExpense as addExpenseAPI,
-  deleteExpense as deleteExpenseAPI,
-} from "../api/api";
+import { createContext, useContext, useEffect, useReducer } from "react";  
 
-const ExpenseContext = createContext();
+import { api } from "../api/api";
 
-const initialState = {
-  expenses: [],
-  loading: false,
-  error: null,
-};
+ 
 
-const expenseReducer = (state, action) => {
-  switch (action.type) {
-    case "SET_EXPENSES":
-      return { ...state, expenses: action.payload };
+const ExpenseContext = createContext();  
 
-    case "ADD_EXPENSE":
-      return {
-        ...state,
-        expenses: [...state.expenses, action.payload],
-      };
+ 
 
-    case "DELETE_EXPENSE":
-      return {
-        ...state,
-        expenses: state.expenses.filter(
-          (expense) => expense._id !== action.payload.id
-        ),
-      };
+const initialState = { expenses: [], loading: false, error: null };  
 
-    case "SET_LOADING":
-      return { ...state, loading: action.payload };
+ 
 
-    case "SET_ERROR":
-      return { ...state, error: action.payload };
+// MongoDB returns _id; normalize to id so the reducer/UI keep working  
 
-    default:
-      return state;
-  }
-};
+const normalize = (e) => ({ ...e, id: e._id });  
 
-export const ExpenseProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(expenseReducer, initialState);
+ 
 
-  // 🔥 1. LOAD EXPENSES (IMPORTANT FIX)
-  const loadExpenses = async () => {
-    try {
-      dispatch({ type: "SET_LOADING", payload: true });
+const expenseReducer = (state, action) => {  
 
-      const token = localStorage.getItem("token");
-       
-      const data = await getExpenses(token);
-       console.log("loaded",data);
-      const expensesArray =
-        data && data.success
-          ? data.expenses
-          : Array.isArray(data)
-          ? data
-          : [];
+  switch (action.type) {  
 
-      dispatch({
-        type: "SET_EXPENSES",
-        payload: expensesArray,
-      });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: error.message,
-      });
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  };
+    case "ADD_EXPENSE":  
 
-  // 🔥 2. LOAD ON APP START
-  useEffect(() => {
-    if (localStorage.getItem("token")) {
-      loadExpenses();
-    }
-  }, []);
+      return { ...state, expenses: [...state.expenses, action.payload] };  
 
-  // 🔥 3. ADD EXPENSE
-  const addExpense = async (expense) => {
-    try {
-      const saved = await addExpenseAPI(expense);
+    case "DELETE_EXPENSE":  
 
-      const newExpense =
-        saved && saved.success ? (saved.expense || saved.data) : saved;
+      return {  
 
-      dispatch({
-        type: "ADD_EXPENSE",
-        payload: newExpense,
-      });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: error.message,
-      });
-    }
-  };
+        ...state,  
 
-  // 🔥 4. DELETE EXPENSE
-  const deleteExpense = async (id) => {
-    try {
-      await deleteExpenseAPI(id);
+        expenses: state.expenses.filter((e) => e.id !== action.payload.id),  
 
-      dispatch({
-        type: "DELETE_EXPENSE",
-        payload: { id },
-      });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: error.message,
-      });
-    }
-  };
+      };  
 
-  return (
-    <ExpenseContext.Provider
-      value={{
-        ...state,
-        loadExpenses, // ✅ FIXED
-        addExpense,
-        deleteExpense,
-      }}
-    >
-      {children}
-    </ExpenseContext.Provider>
-  );
-};
+    case "UPDATE_EXPENSE":  
 
-// 🔥 CUSTOM HOOK
-export const useExpenses = () => {
-  const context = useContext(ExpenseContext);
+      return {  
 
-  if (!context) {
-    throw new Error("useExpenses must be used within ExpenseProvider");
-  }
+        ...state,  
 
-  return context;
+        expenses: state.expenses.map((e) =>  
+
+          e.id === action.payload.id ? action.payload : e  
+
+        ),  
+
+      };  
+
+    case "SET_EXPENSES":  
+
+      return { ...state, expenses: action.payload };  
+
+    case "SET_LOADING":  
+
+      return { ...state, loading: action.payload };  
+
+    case "SET_ERROR":  
+
+      return { ...state, error: action.payload };  
+
+    default:  
+
+      return state;  
+
+  }  
+
+};  
+
+ 
+
+export const ExpenseProvider = ({ children }) => {  
+
+  const [state, dispatch] = useReducer(expenseReducer, initialState);  
+
+ 
+
+  // Load expenses from backend on mount (replaces localStorage effect)  
+
+  useEffect(() => {  
+
+    (async () => {  
+
+      try {  
+
+        dispatch({ type: "SET_LOADING", payload: true });  
+
+        const data = await api("expenses");  
+
+        dispatch({ type: "SET_EXPENSES", payload: data.map(normalize) });  
+
+      } catch (error) {  
+
+        dispatch({ type: "SET_ERROR", payload: error });  
+
+      } finally {  
+
+        dispatch({ type: "SET_LOADING", payload: false });  
+
+      }  
+
+    })();  
+
+  }, []);  
+
+ 
+
+  const value = {  
+
+    ...state,  
+
+    addExpense: async (expense) => {  
+
+      // backend expects `title`, not `description`  
+
+      const saved = await api("expenses/add", {  
+
+        method: "POST",  
+
+        body: JSON.stringify({  
+
+          title: expense.title,
+
+          description:expense.description,
+
+          amount: expense.amount,  
+
+          category: expense.category,  
+
+          type: "expense",  
+
+          date: expense.date,  
+
+        }),  
+
+      });  
+
+      dispatch({ type: "ADD_EXPENSE", payload: normalize(saved) });  
+
+    },  
+
+    deleteExpense: async (id) => {  
+
+      await api(`expenses/delete/${id}`, { method: "DELETE" });  
+
+      dispatch({ type: "DELETE_EXPENSE", payload: { id } });  
+
+    },  
+
+    updateExpense: async (expense) => {  
+
+      const updated = await api(`expenses/update/${expense.id}`, {  
+
+        method: "PUT",  
+
+        body: JSON.stringify(expense),  
+
+      });  
+
+      dispatch({ type: "UPDATE_EXPENSE", payload: normalize(updated) });  
+
+    },  
+
+  };  
+
+ 
+
+  return (  
+
+    <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>  
+
+  );  
+
+};  
+
+ 
+
+export const useExpenses = () => {  
+
+  const context = useContext(ExpenseContext);  
+
+  if (context === undefined) {  
+
+    throw new Error("useExpenses must be used within an ExpenseProvider");  
+
+  }  
+
+  return context;  
+
 };

@@ -17,6 +17,7 @@ const getInsights = async (req, res) => {
 
     const transactions = await Transaction.find({
       user: req.user._id,
+      type: "expense"
     });
 
     const insights = generateInsights(
